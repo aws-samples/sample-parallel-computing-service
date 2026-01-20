@@ -1,0 +1,134 @@
+#!/bin/bash
+
+set -xe
+
+PASSWD=${ldap_password}
+dnf install -y openldap-servers openldap-clients openldap nss-pam-ldapd
+
+# Ldap conf
+cat > /etc/openldap/ldap.conf << EOF
+BASE dc=my-domain,dc=com
+URI  ldap://localhost
+EOF
+
+systemctl enable slapd
+systemctl start slapd
+
+# Create schema for ldapPublicKey
+cat > /tmp/openssh-lpk.ldif << EOF
+dn: cn=openssh-lpk,cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: openssh-lpk
+olcAttributeTypes: ( 1.3.6.1.4.1.24552.500.1.1.1.13 NAME 'sshPublicKey'
+  DESC 'MANDATORY: OpenSSH Public key'
+  EQUALITY octetStringMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.40 )
+olcObjectClasses: ( 1.3.6.1.4.1.24552.500.1.1.2.0 NAME 'ldapPublicKey' SUP top AUXILIARY
+  DESC 'MANDATORY: OpenSSH LPK objectclass'
+  MAY ( sshPublicKey $ uid )
+  )
+EOF
+
+ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/openssh-lpk.ldif
+rm /tmp/openssh-lpk.ldif
+
+enc_pass=$(slappasswd -s ${ldap_password})
+
+cat > /tmp/rootpw.ldif << EOF
+dn: olcDatabase={2}mdb,cn=config
+changetype: modify
+add: olcRootPW
+olcRootPW: $enc_pass
+EOF
+ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/rootpw.ldif
+rm /tmp/rootpw.ldif
+
+cat > /tmp/disable_anon.ldif << EOF
+dn: cn=config
+changetype: modify
+add: olcDisallows
+olcDisallows: bind_anon
+EOF
+
+ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/disable_anon.ldif
+rm /tmp/disable_anon.ldif
+
+ldapadd -Y EXTERNAL -H ldapi:// -f /etc/openldap/schema/cosine.ldif
+ldapadd -Y EXTERNAL -H ldapi:// -f /etc/openldap/schema/inetorgperson.ldif
+ldapadd -Y EXTERNAL -H ldapi:// -f /etc/openldap/schema/nis.ldif
+ldapadd -Y EXTERNAL -H ldapi:// -f /usr/share/doc/sudo/schema.olcSudo
+
+# Index sudoers
+cat > /tmp/index.ldif << EOF
+dn: olcDatabase={2}mdb,cn=config
+changetype: modify
+add: olcDbIndex
+olcDbIndex: sudoUser,sudoHost pres,eq
+EOF
+ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/index.ldif
+rm /tmp/index.ldif
+
+# Create cluster groups
+cat > /tmp/top.ldif << EOF
+dn: dc=my-domain,dc=com
+objectClass: dcObject
+objectClass: organization
+o: my-domain.com
+dc: my-domain
+
+dn: ou=people,dc=my-domain,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: people
+
+dn: ou=groups,dc=my-domain,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+dn: cn=wheel,ou=groups,dc=my-domain,dc=com
+objectClass: top
+objectClass: posixGroup
+cn: wheel
+gidNumber: 10
+description: Wheel users
+
+dn: cn=staff,ou=groups,dc=my-domain,dc=com
+objectClass: top
+objectClass: posixGroup
+cn: staff
+gidNumber: 2000
+description: Staff members
+
+dn: ou=sudoers,dc=my-domain,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: sudo
+description: Default ou for SUDO
+
+dn: cn=defaults,ou=sudoers,dc=my-domain,dc=com
+objectClass: top
+objectClass: sudoRole
+cn: defaults
+description: Default sudoOptions
+sudoOption: !visiblepw
+
+dn: cn=%wheel,ou=sudoers,dc=my-domain,dc=com
+objectClass: top
+objectClass: sudoRole
+cn: %wheel
+sudoUser: %wheel
+sudoHost: ALL
+sudoCommand: ALL
+sudoOption: !authenticate
+EOF
+
+ldapadd -x -D 'cn=Manager,dc=my-domain,dc=com' -f /tmp/top.ldif -w "$PASSWD"
+rm /tmp/top.ldif
+
+cat > /tmp/users.ldif << EOF
+${users_ldif}
+EOF
+ldapadd -x -D 'cn=Manager,dc=my-domain,dc=com' -f /tmp/users.ldif -w "$PASSWD"
+rm /tmp/users.ldif
+

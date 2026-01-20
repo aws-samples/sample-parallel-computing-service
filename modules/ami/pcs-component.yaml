@@ -1,0 +1,205 @@
+---
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify,
+# merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+name: pcs-component
+description: Creates a PCS AMI.
+schemaVersion: 1.0
+
+parameters:
+  - Region:
+      type: string
+      default: 'us-east-2'
+      description: AWS Region to build in
+  - BucketName:
+      type: string
+      default: 'pcs-wrf'
+      description: Input parameter specifying the bucket name
+  - PCSVersion:
+      type: string
+      default: 'v1'
+      description: PCS Agent version
+  - SlurmVersion:
+      type: string
+      description: Slurm version
+  - EFAVersion:
+      type: string
+      default: '1.46.0'
+      description: EFA version
+  - ZFSDNS:
+      type: string
+      description: OpenZFS DNS name
+  - ZFSMnt:
+      type: string
+      default: '/fsx'
+      description: OpenZFS mount point
+  - LDAPDNS:
+      type: string
+      description: The private DNS address of the LDAP server
+  - LDAPPassword:
+      type: string
+      description: The password to bind to LDAP
+
+
+phases:
+  - name: build
+    steps:
+
+      - name: UpdateOS
+        action: UpdateOS
+
+      - name: TurnOffSRSO
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              grubby --update-kernel=ALL --args='spec_rstack_overflow=off'
+
+      - name: GetPCSAgent
+        action: WebDownload
+        inputs:
+          - source: https://aws-pcs-repo-{{ Region }}.s3.{{ Region }}.amazonaws.com/aws-pcs-agent/aws-pcs-agent-{{ PCSVersion }}-latest.tar.gz
+            destination: /tmp/aws-pcs-agent-{{ PCSVersion }}-latest.tar.gz
+            overwrite: true
+
+      - name: InstallPCSAgent
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              cd /tmp
+              tar xf aws-pcs-agent-{{ PCSVersion }}-latest.tar.gz
+              export HOME=/tmp
+              cd aws-pcs-agent
+              ./installer.sh
+              cd /tmp
+              rm -rf aws-pcs-agent  aws-pcs-agent-{{ PCSVersion }}-latest.tar.gz
+
+      - name: GetSlurm
+        action: WebDownload
+        inputs:
+          - source: https://aws-pcs-repo-{{ Region }}.s3.{{ Region }}.amazonaws.com/aws-pcs-slurm/aws-pcs-slurm-{{ SlurmVersion }}-installer-latest.tar.gz
+            destination: /tmp/aws-pcs-slurm-{{ SlurmVersion }}-installer-latest.tar.gz
+            overwrite: true
+
+      - name: InstallSlurm
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              cd /tmp
+              tar xf /tmp/aws-pcs-slurm-{{ SlurmVersion }}-installer-latest.tar.gz
+              export HOME=/tmp
+              cd aws-pcs-slurm-{{ SlurmVersion }}-installer
+              ./installer.sh -y
+              cd /tmp
+              rm -rf aws-pcs-slurm-{{ SlurmVersion }}-installer  aws-pcs-slurm-{{ SlurmVersion }}-installer-latest.tar.gz
+
+      - name: GetEFA
+        action: WebDownload
+        inputs:
+          - source: https://efa-installer.amazonaws.com/aws-efa-installer-{{ EFAVersion }}.tar.gz
+            destination: /tmp/aws-efa-installer-{{ EFAVersion }}.tar.gz
+            overwrite: true
+
+      - name: InstallEFA
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              cd /tmp
+              tar xf /tmp/aws-efa-installer-{{ EFAVersion }}.tar.gz
+              export HOME=/tmp SYSTEMCTL=/bin/systemctl
+              cd aws-efa-installer
+              ./efa_installer.sh -y
+              cd /tmp
+              rm -rf aws-efa-installer  aws-efa-installer-{{ EFAVersion }}.tar.gz
+
+      - name: InstallLustre
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              dnf install -y lustre-client
+
+      - name: InstallEFS
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              dnf install -y amazon-efs-utils
+
+      - name: InstallCloudWatchAgent
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              yum install -y amazon-cloudwatch-agent
+
+      - name: MountOpenZFS
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              cd /home
+              tar cf - * > /tmp/home.tar
+              cd /
+              echo "{{ ZFSDNS }}:{{ ZFSMnt }}/sw /sw nfs noatime,nfsvers=4.2,sync,nconnect=16,rsize=1048576,wsize=1048576 0 0" >> /etc/fstab
+              echo "{{ ZFSDNS }}:{{ ZFSMnt }}/home /home nfs noatime,nfsvers=4.2,sync,nconnect=16,rsize=1048576,wsize=1048576 0 0" >> /etc/fstab
+              mount /home
+              cd /home
+              tar xf /tmp/home.tar
+
+      - name: InstallLDAPClient
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              dnf install -y authselect openldap-clients openldap nss_ldap sssd sssd-ldap oddjob-mkhomedir
+              echo "BASE    dc=my-domain,dc=com" >> /etc/openldap/ldap.conf
+              echo "URI     ldap://{{ LDAPDNS }}" >> /etc/openldap/ldap.conf
+              cp /etc/openldap/ldap.conf /etc/ldap.conf
+              cat > /etc/sssd/sssd.conf << EOF
+              [sssd]
+              config_file_version = 2
+              domains = my-domain.com
+              services = nss,pam,sudo,ssh
+
+              [domain/my-domain.com]
+              id_provider = ldap
+              auth_provider = ldap
+              sudo_provider = ldap
+              ldap_uri = ldap://{{ LDAPDNS }}
+              cache_credentials = False
+              entry_cache_timeout = 600
+              ldap_search_base = DC=my-domain,DC=com
+              ldap_default_bind_dn = cn=Manager,dc=my-domain,dc=com
+              ldap_default_authtok_type = password
+              ldap_default_authtok = {{ LDAPPassword }}
+              ldap_sudo_search_base = ou=sudoers,dc=my-domain,dc=com
+
+              [nss]
+              homedir_substring = /home
+              EOF
+              chmod 600 /etc/sssd/sssd.conf
+              authselect select sssd with-mkhomedir with-sudo --force
+              systemctl enable --now sssd
+              systemctl enable --now oddjobd.service
+              sed -i '/AuthorizedKeysCommand/d' /etc/ssh/sshd_config
+              echo "AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys" >> /etc/ssh/sshd_config
+              echo "AuthorizedKeysCommandUser nobody" >> /etc/ssh/sshd_config
+
+
