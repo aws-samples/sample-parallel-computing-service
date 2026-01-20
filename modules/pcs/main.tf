@@ -14,6 +14,14 @@ resource "awscc_pcs_cluster" "wx" {
   size = "SMALL"
 }
 
+locals {
+  login_instance_template = (
+    fileexists("${path.module}/templates/${var.instance_login}.userdata.tpl") ?
+    "${path.module}/templates/${var.instance_login}.userdata.tpl" :
+    "${path.module}/templates/default.userdata.tpl"
+  )
+}
+
 resource "aws_launch_template" "pcs_login" {
   name = "login-wx"
 
@@ -41,7 +49,7 @@ resource "aws_launch_template" "pcs_login" {
     ]
   }
 
-  user_data = base64encode(templatefile("${path.module}/templates/${var.instance_login}.userdata.tpl", {
+  user_data = base64encode(templatefile("${local.login_instance_template}", {
     zfs_dns = var.zfs_filesystem_dns
     zfs_mnt = var.zfs_filesystem_mnt
     lustre_dns = var.lustre_filesystem_dns
@@ -81,7 +89,8 @@ locals {
   all_instances = toset(concat(var.instance_x86, var.instance_arm, var.instance_gpu))
   nics = {for instance in local.all_instances:
     instance => range(0, data.aws_ec2_instance_type.all[instance].maximum_network_cards)}
-
+  cores = {for instance in local.all_instances:
+    instance => data.aws_ec2_instance_type.all[instance].default_cores}
 }
 
 data "aws_ec2_instance_type" "all" {
@@ -100,6 +109,11 @@ resource "aws_launch_template" "pcs" {
   }
 
   key_name = var.ssh_key
+  # Always turn off SMT
+  cpu_options {
+    core_count       = local.cores[each.value]
+    threads_per_core = 1
+  }
 
   iam_instance_profile {
     arn = var.pcs_compute_profile_arn
@@ -115,7 +129,7 @@ resource "aws_launch_template" "pcs" {
     iterator = nic
     content {
       associate_public_ip_address = false
-      device_index = tonumber(nic.value)
+      device_index = tonumber(nic.value) >= 1 ? "1" : "0"
       network_card_index = tonumber(nic.value)
       interface_type = "efa"
       security_groups = var.private_sg_ids

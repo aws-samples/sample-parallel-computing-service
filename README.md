@@ -29,12 +29,14 @@ has the following components installed
 
 ## Customization
 
-Three top-level variables should be set in the `terraform.tfvars` file before deployment.
-- `region`
+Top-level variables should be set in the `terraform.tfvars` file before deployment.
+The most important ones are
+- `region` & `availability_zone`
 - `ssh_key`
 - `users`
 
-The `region` is the AWS Region the cluster should be deployed in.
+The `region` and `availability_zone` are the AWS Region and Availability Zone the cluster should
+be deployed in.
 
 While the `ssh_key` is the public ssh key used for access to the
 Amazon EC2 instances.
@@ -43,9 +45,10 @@ The `users` variable is a LDIF file name that contains all the
 cluster users to add to LDAP. Users will ssh into the cluster
 using only their ssh key, there is no password access.
 
-## Users LDIF
+Other variables are defined in `variables.tf` and of course can/should
+be overridden in `terraform.tfvars`.
 
-We are using the default DN of `dc=my-domain,dc=com`.
+## Users LDIF
 
 A user LDIF file needs to be created to grant access to the
 cluster. This file is populated into LDAP via `ldapadd`.
@@ -90,7 +93,7 @@ terraform plan
 terraform apply -auto-approve
 ```
 
-## Dependency Graph
+# Dependency Graph
 
 To create a dependency graph.
 ```
@@ -104,7 +107,8 @@ To tear it all down.
 terraform destroy -auto-approve
 ```
 
-You should also delete the LDAP secret.
+The LDAP secret should be deleted by Terraform, if it isn't you can force a
+deletion with the following command.
 ```
 aws secretsmanager delete-secret --secret-id ldap-password --force-delete-without-recovery --region us-east-2
 ```

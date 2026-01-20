@@ -140,19 +140,19 @@ data "aws_iam_policy_document" "assume" {
   }
 }
 
-resource "aws_iam_role" "awsserviceroleforimagebuilder" {
+resource "aws_iam_role" "imagebuilder" {
+  name_prefix        = "pcs-imagebuilder-role"
   assume_role_policy = data.aws_iam_policy_document.assume.json
-  name               = "wx-role"
 }
 
 resource "aws_iam_role_policy_attachment" "imagebuilder" {
   policy_arn = "arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilder"
-  role       = aws_iam_role.awsserviceroleforimagebuilder.name
+  role       = aws_iam_role.imagebuilder.name
 }
 
 resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  role       = aws_iam_role.awsserviceroleforimagebuilder.name
+  role       = aws_iam_role.imagebuilder.name
 }
 
 data "aws_iam_policy_document" "s3" {
@@ -168,19 +168,19 @@ data "aws_iam_policy_document" "s3" {
 }
 
 resource "aws_iam_policy" "s3" {
-  name        = "s3-access"
+  name_prefix = "pcs-s3-access"
   description = "Allow all S3 access"
   policy      = data.aws_iam_policy_document.s3.json
 }
 
 resource "aws_iam_role_policy_attachment" "s3" {
   policy_arn = aws_iam_policy.s3.arn
-  role       = aws_iam_role.awsserviceroleforimagebuilder.name
+  role       = aws_iam_role.imagebuilder.name
 }
 
 resource "aws_iam_instance_profile" "iam_instance_profile" {
-  name = "EC2InstanceProfileImageBuilder-PCS"
-  role = aws_iam_role.awsserviceroleforimagebuilder.name
+  name_prefix = "pcs-instance-profile-imagebuilder"
+  role = aws_iam_role.imagebuilder.name
 }
 
 resource "aws_imagebuilder_infrastructure_configuration" "wx_x86" {
