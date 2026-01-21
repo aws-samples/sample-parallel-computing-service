@@ -91,7 +91,6 @@ locals {
     instance => range(0, data.aws_ec2_instance_type.all[instance].maximum_network_cards)}
   cores = {for instance in local.all_instances:
     instance => data.aws_ec2_instance_type.all[instance].default_cores}
-
 }
 
 data "aws_ec2_instance_type" "all" {

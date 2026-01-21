@@ -1,7 +1,7 @@
-# AWS Parallel Compute Service
+# AWS Parallel Computing Service
 
 This reposity contains sample Terraform to deploy a cluster
-using AWS Parallel Compute Service.
+using AWS Parallel Computing Service.
 
 ## Architure
 ![Architure](WX_PCS.png)
