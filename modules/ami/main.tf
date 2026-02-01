@@ -191,7 +191,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "wx_x86" {
   name                  = "wx-pcs-x86"
   security_group_ids    = [var.public_sg_id]
   subnet_id             = var.public_subnet_id
-  terminate_instance_on_failure = false
+  terminate_instance_on_failure = true
 
   logging {
     s3_logs {
@@ -300,7 +300,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "wx_arm" {
   name                  = "wx-pcs-arm"
   security_group_ids    = [var.public_sg_id]
   subnet_id             = var.public_subnet_id
-  terminate_instance_on_failure = false
+  terminate_instance_on_failure = true
 
   logging {
     s3_logs {
