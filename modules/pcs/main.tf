@@ -109,10 +109,13 @@ resource "aws_launch_template" "pcs" {
   }
 
   key_name = var.ssh_key
-  # Always turn off SMT
-  cpu_options {
-    core_count       = local.cores[each.value]
-    threads_per_core = 1
+
+  dynamic "cpu_options" {
+    for_each = can(regex("^hpc", each.value)) ? [] : [each.value]
+    content {
+      core_count       = local.cores[each.value]
+      threads_per_core = 1
+    }
   }
 
   iam_instance_profile {
