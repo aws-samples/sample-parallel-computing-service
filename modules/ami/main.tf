@@ -53,7 +53,7 @@ data "aws_ami" "dlami_x86" {
   most_recent = true
   filter {
     name   = "name"
-    values = ["Deep Learning Base AMI with Single CUDA (Amazon Linux 2023) 20260109"]
+    values = ["Deep Learning Base AMI with Single CUDA (Amazon Linux 2023) *"]
   }
   filter {
     name   = "virtualization-type"
