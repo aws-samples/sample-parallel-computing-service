@@ -100,6 +100,13 @@ cn: staff
 gidNumber: 2000
 description: Staff members
 
+dn: cn=docker,ou=groups,dc=my-domain,dc=com
+objectClass: top
+objectClass: posixGroup
+cn: docker
+gidNumber: 988
+description: Docker users
+
 dn: ou=sudoers,dc=my-domain,dc=com
 objectClass: organizationalUnit
 objectClass: top
