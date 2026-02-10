@@ -168,6 +168,14 @@ phases:
               ENROOT_DATA_PATH           /tmp/enroot/data/user-\$(id -u)
               ENROOT_TEMP_PATH           \${TMPDIR:-/tmp}
               EOF
+              cat > /etc/enroot/hooks.d/50-slurm-pmi.sh << EOF
+              #!/usr/bin/bash
+              PATH=$PATH:/opt/aws/pcs/scheduler/slurm-{{ SlurmVersion }}/bin
+              EOF
+              cp /etc/enroot/hooks.d/50-slurm-pmi.sh /etc/enroot/hooks.d/50-slurm-pytorch.sh
+              sed -n '2,$p' /usr/share/enroot/hooks.d/slurm/50-slurm-pmi.sh >> /etc/enroot/hooks.d/50-slurm-pmi.sh
+              sed -n '2,$p' /usr/share/enroot/hooks.d/slurm/50-slurm-pytorch.sh >> /etc/enroot/hooks.d/50-slurm-pytorch.sh
+              chmod 755 /etc/enroot/hooks.d/50-slurm-pmi.sh /etc/enroot/hooks.d/50-slurm-pytorch.sh
               cd /tmp
               git clone https://github.com/NVIDIA/pyxis
               cd pyxis
