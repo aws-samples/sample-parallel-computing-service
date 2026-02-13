@@ -127,6 +127,13 @@ resource "aws_fsx_openzfs_file_system" "fsxz" {
   delete_options      = ["DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"]
   throughput_capacity = 2560
   security_group_ids = [aws_security_group.zfs.id]
+
+  # Ensure security group rules are created before the file system
+  depends_on = [
+    aws_vpc_security_group_ingress_rule.zfs_allow_ingress,
+    aws_vpc_security_group_egress_rule.zfs_allow_egress
+  ]
+
   root_volume_configuration {
     data_compression_type = "ZSTD"
     nfs_exports {
