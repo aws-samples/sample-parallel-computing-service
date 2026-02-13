@@ -173,8 +173,8 @@ phases:
               PATH=$PATH:/opt/aws/pcs/scheduler/slurm-{{ SlurmVersion }}/bin
               EOF
               cp /etc/enroot/hooks.d/50-slurm-pmi.sh /etc/enroot/hooks.d/50-slurm-pytorch.sh
-              sed -n '2,$p' /usr/share/enroot/hooks.d/slurm/50-slurm-pmi.sh >> /etc/enroot/hooks.d/50-slurm-pmi.sh
-              sed -n '2,$p' /usr/share/enroot/hooks.d/slurm/50-slurm-pytorch.sh >> /etc/enroot/hooks.d/50-slurm-pytorch.sh
+              sed -n '2,$p' /usr/share/enroot/hooks.d/50-slurm-pmi.sh >> /etc/enroot/hooks.d/50-slurm-pmi.sh
+              sed -n '2,$p' /usr/share/enroot/hooks.d/50-slurm-pytorch.sh >> /etc/enroot/hooks.d/50-slurm-pytorch.sh
               chmod 755 /etc/enroot/hooks.d/50-slurm-pmi.sh /etc/enroot/hooks.d/50-slurm-pytorch.sh
               cd /tmp
               git clone https://github.com/NVIDIA/pyxis
