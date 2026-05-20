@@ -95,29 +95,29 @@ locals {
 }
 
 resource "aws_security_group" "zfs" {
-  name = "aws_zfs_security_group"
-  vpc_id = var.vpc_id
+  name        = "aws_zfs_security_group"
+  vpc_id      = var.vpc_id
   description = "Security group for Amazon FSx OpenZFS file system"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "zfs_allow_ingress" {
-  for_each = local.zfs_security_group_rules.ingress
+  for_each          = local.zfs_security_group_rules.ingress
   security_group_id = aws_security_group.zfs.id
   cidr_ipv4         = var.vpc_cidr
   from_port         = each.value.from_port
   ip_protocol       = each.value.ip_protocol
   to_port           = each.value.to_port
-  description = "Ingress rule for Amazon FSx OpenZFS"
+  description       = "Ingress rule for Amazon FSx OpenZFS"
 }
 
 resource "aws_vpc_security_group_egress_rule" "zfs_allow_egress" {
-  for_each = local.zfs_security_group_rules.egress
+  for_each          = local.zfs_security_group_rules.egress
   security_group_id = aws_security_group.zfs.id
   cidr_ipv4         = var.vpc_cidr
   from_port         = each.value.from_port
   ip_protocol       = each.value.ip_protocol
   to_port           = each.value.to_port
-  description = "Egress rule for Amazon FSx OpenZFS"
+  description       = "Egress rule for Amazon FSx OpenZFS"
 }
 
 resource "aws_fsx_openzfs_file_system" "fsxz" {
@@ -126,7 +126,7 @@ resource "aws_fsx_openzfs_file_system" "fsxz" {
   deployment_type     = "SINGLE_AZ_HA_2"
   delete_options      = ["DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"]
   throughput_capacity = 2560
-  security_group_ids = [aws_security_group.zfs.id]
+  security_group_ids  = [aws_security_group.zfs.id]
   root_volume_configuration {
     data_compression_type = "ZSTD"
     nfs_exports {
@@ -139,8 +139,8 @@ resource "aws_fsx_openzfs_file_system" "fsxz" {
 }
 
 resource "aws_fsx_openzfs_volume" "sw" {
-  name = "sw"
-  parent_volume_id = aws_fsx_openzfs_file_system.fsxz.root_volume_id
+  name                  = "sw"
+  parent_volume_id      = aws_fsx_openzfs_file_system.fsxz.root_volume_id
   data_compression_type = "ZSTD"
   nfs_exports {
     client_configurations {
@@ -151,8 +151,8 @@ resource "aws_fsx_openzfs_volume" "sw" {
 }
 
 resource "aws_fsx_openzfs_volume" "home" {
-  name = "home"
-  parent_volume_id = aws_fsx_openzfs_file_system.fsxz.root_volume_id
+  name                  = "home"
+  parent_volume_id      = aws_fsx_openzfs_file_system.fsxz.root_volume_id
   data_compression_type = "ZSTD"
   nfs_exports {
     client_configurations {
@@ -163,57 +163,57 @@ resource "aws_fsx_openzfs_volume" "home" {
 }
 
 resource "aws_security_group" "fsxl" {
-  name = "aws_fsx_lustre_security_group"
-  vpc_id = var.vpc_id
+  name        = "aws_fsx_lustre_security_group"
+  vpc_id      = var.vpc_id
   description = "Security group for Amazon FSx Lustre file system"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "fsxl_allow_ingress" {
-  for_each = local.fsxl_security_group_rules.ingress
+  for_each          = local.fsxl_security_group_rules.ingress
   security_group_id = aws_security_group.fsxl.id
   cidr_ipv4         = var.vpc_cidr
   from_port         = each.value.from_port
   ip_protocol       = each.value.ip_protocol
   to_port           = each.value.to_port
-  description = "Ingress rule for Amazon FSx Lustre"
+  description       = "Ingress rule for Amazon FSx Lustre"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "fsxl_allow_ingress_efa" {
-  security_group_id = aws_security_group.fsxl.id
-  ip_protocol       = -1
-  referenced_security_group_id  = aws_security_group.fsxl.id
-  description = "Ingress rule for Amazon FSx Lustre"
+  security_group_id            = aws_security_group.fsxl.id
+  ip_protocol                  = -1
+  referenced_security_group_id = aws_security_group.fsxl.id
+  description                  = "Ingress rule for Amazon FSx Lustre"
 }
 
 resource "aws_vpc_security_group_egress_rule" "fsxl_allow_egress" {
-  for_each = local.fsxl_security_group_rules.egress
+  for_each          = local.fsxl_security_group_rules.egress
   security_group_id = aws_security_group.fsxl.id
   cidr_ipv4         = var.vpc_cidr
   from_port         = each.value.from_port
   ip_protocol       = each.value.ip_protocol
   to_port           = each.value.to_port
-  description = "Egress rule for Amazon FSx Lustre"
+  description       = "Egress rule for Amazon FSx Lustre"
 }
 
 resource "aws_vpc_security_group_egress_rule" "fsxl_allow_egress_efa" {
-  security_group_id = aws_security_group.fsxl.id
-  ip_protocol       = -1
-  referenced_security_group_id  = aws_security_group.fsxl.id
-  description = "Egress rule for Amazon FSx Lustre"
+  security_group_id            = aws_security_group.fsxl.id
+  ip_protocol                  = -1
+  referenced_security_group_id = aws_security_group.fsxl.id
+  description                  = "Egress rule for Amazon FSx Lustre"
 }
 
 resource "aws_fsx_lustre_file_system" "fsxl" {
-  deployment_type = "PERSISTENT_2"
+  deployment_type       = "PERSISTENT_2"
   data_compression_type = "LZ4"
-  efa_enabled = true
-  security_group_ids = [aws_security_group.fsxl.id]
-  storage_type = "INTELLIGENT_TIERING"
-  subnet_ids = [var.private_subnet_id]
-  throughput_capacity = 4000
+  efa_enabled           = true
+  security_group_ids    = [aws_security_group.fsxl.id]
+  storage_type          = "INTELLIGENT_TIERING"
+  subnet_ids            = [var.private_subnet_id]
+  throughput_capacity   = 4000
 
   data_read_cache_configuration {
     sizing_mode = "USER_PROVISIONED"
-    size = 20000
+    size        = 20000
   }
 
   metadata_configuration {

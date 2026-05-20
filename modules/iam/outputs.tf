@@ -25,5 +25,5 @@ output "pcs_compute_profile_id" {
 
 output "ssh_key" {
   description = "SSH key pair name"
-  value = aws_key_pair.pcs.key_name
+  value       = aws_key_pair.pcs.key_name
 }

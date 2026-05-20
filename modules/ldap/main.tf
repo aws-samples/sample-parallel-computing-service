@@ -39,9 +39,9 @@ data "local_file" "users_ldif" {
 
 locals {
   user_data = templatefile("${path.module}/ldap.tftpl", {
-    region = var.region,
+    region        = var.region,
     ldap_password = aws_secretsmanager_secret_version.ldap_password.secret_string,
-    users_ldif = data.local_file.users_ldif.content
+    users_ldif    = data.local_file.users_ldif.content
   })
 }
 

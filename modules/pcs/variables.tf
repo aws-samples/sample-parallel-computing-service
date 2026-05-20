@@ -1,50 +1,50 @@
 variable "region" {
-  type    = string
+  type = string
 }
 
 variable "public_subnet_id" {
   description = "Public subnet ID"
-  type = string
+  type        = string
 }
 
 variable "public_sg_id" {
   description = "Public security group ID"
-  type = string
+  type        = string
 }
 
 variable "private_subnet_id" {
   description = "Private subnet ID"
-  type = string
+  type        = string
 }
 
 variable "private_sg_ids" {
   description = "Private security group IDs"
-  type = list
+  type        = list(any)
 }
 
 variable "ssh_key" {
   description = "SSH key pair to use for instances"
-  type = string
+  type        = string
 }
 
 variable "slurm_version" {
   description = "Slurm version"
-  type = string
+  type        = string
 }
 
 variable "pcs_compute_profile_arn" {
   description = "ARN of the PCS compute profile to attach to instances"
-  type = string
+  type        = string
 }
 
 variable "ami_id_x86" {
   description = "The AMI ID of the PCS X86_64 instance"
-  type = string
+  type        = string
 }
 
 variable "ami_id_arm" {
   description = "The AMI ID of the PCS ARM64 instance"
-  type = string
+  type        = string
 }
 
 variable "instance_login" {
@@ -54,17 +54,17 @@ variable "instance_login" {
 
 variable "instance_x86" {
   description = "Instance type of CPU X86_64 node(s)"
-  type        = list
+  type        = list(any)
 }
 
 variable "instance_arm" {
   description = "Instance type of CPU ARM64 node(s)"
-  type        = list
+  type        = list(any)
 }
 
 variable "instance_gpu" {
   description = "Instance type of GPU node(s)"
-  type        = list
+  type        = list(any)
 }
 
 variable "zfs_filesystem_dns" {

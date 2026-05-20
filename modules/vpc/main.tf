@@ -1,7 +1,7 @@
 
 resource "aws_vpc" "wx" {
-  cidr_block = var.vpc_cidr
-  enable_dns_support = true
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
     Name = "wx"
@@ -40,13 +40,13 @@ locals {
         from_port   = 22
         to_port     = 22
         ip_protocol = "tcp"
-        cidr_ipv4 = "0.0.0.0/0"
+        cidr_ipv4   = "0.0.0.0/0"
       }
       "self" = {
         from_port   = -1
         to_port     = -1
         ip_protocol = "-1"
-        cidr_ipv4 = var.vpc_cidr
+        cidr_ipv4   = var.vpc_cidr
       }
     }
     egress = {
@@ -54,7 +54,7 @@ locals {
         from_port   = -1
         to_port     = -1
         ip_protocol = "-1"
-        cidr_ipv4 = "0.0.0.0/0"
+        cidr_ipv4   = "0.0.0.0/0"
       }
     }
   }
@@ -64,7 +64,7 @@ locals {
         from_port   = -1
         to_port     = -1
         ip_protocol = "-1"
-        cidr_ipv4 = var.vpc_cidr
+        cidr_ipv4   = var.vpc_cidr
       }
     }
     egress = {
@@ -72,7 +72,7 @@ locals {
         from_port   = -1
         to_port     = -1
         ip_protocol = "-1"
-        cidr_ipv4 = "0.0.0.0/0"
+        cidr_ipv4   = "0.0.0.0/0"
       }
     }
   }
@@ -84,7 +84,7 @@ resource "aws_security_group" "wx_public" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "wx_public_allow_ingress" {
-  for_each = local.wx_public_security_group_rules.ingress
+  for_each          = local.wx_public_security_group_rules.ingress
   security_group_id = aws_security_group.wx_public.id
   cidr_ipv4         = each.value.cidr_ipv4
   from_port         = each.value.from_port
@@ -93,7 +93,7 @@ resource "aws_vpc_security_group_ingress_rule" "wx_public_allow_ingress" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "wx_public_allow_egress" {
-  for_each = local.wx_public_security_group_rules.egress
+  for_each          = local.wx_public_security_group_rules.egress
   security_group_id = aws_security_group.wx_public.id
   cidr_ipv4         = each.value.cidr_ipv4
   from_port         = each.value.from_port
@@ -102,12 +102,12 @@ resource "aws_vpc_security_group_egress_rule" "wx_public_allow_egress" {
 }
 
 resource "aws_security_group" "wx_private" {
-  name = "aws_private_compute_environment_security_group"
+  name   = "aws_private_compute_environment_security_group"
   vpc_id = aws_vpc.wx.id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "wx_private_allow_ingress" {
-  for_each = local.wx_private_security_group_rules.ingress
+  for_each          = local.wx_private_security_group_rules.ingress
   security_group_id = aws_security_group.wx_private.id
   cidr_ipv4         = each.value.cidr_ipv4
   from_port         = each.value.from_port
@@ -116,7 +116,7 @@ resource "aws_vpc_security_group_ingress_rule" "wx_private_allow_ingress" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "wx_private_allow_egress" {
-  for_each = local.wx_private_security_group_rules.egress
+  for_each          = local.wx_private_security_group_rules.egress
   security_group_id = aws_security_group.wx_private.id
   cidr_ipv4         = each.value.cidr_ipv4
   from_port         = each.value.from_port

@@ -8,6 +8,6 @@ output "ldap_server_instance_id" {
 }
 
 output "ldap_password" {
-  value = aws_secretsmanager_secret_version.ldap_password.secret_string
+  value     = aws_secretsmanager_secret_version.ldap_password.secret_string
   sensitive = true
 }

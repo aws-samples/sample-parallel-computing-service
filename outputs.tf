@@ -5,17 +5,17 @@ output "vpc_id" {
 
 output "ldap_server_private_dns" {
   description = ""
-  value = module.ldap.ldap_server_private_dns
+  value       = module.ldap.ldap_server_private_dns
 }
 
-output fs_openzfs {
+output "fs_openzfs" {
   description = "FSx OpenZFS file system ID"
-  value = module.fsx.fs_openzfs_id
+  value       = module.fsx.fs_openzfs_id
 }
 
-output fs_lustre {
+output "fs_lustre" {
   description = "FSx Lustre file system ID"
-  value = module.fsx.fs_lustre_id
+  value       = module.fsx.fs_lustre_id
 }
 
 output "pcs_cluster_id" {

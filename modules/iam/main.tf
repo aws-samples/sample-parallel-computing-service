@@ -3,7 +3,7 @@ data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["ec2.amazonaws.com"]
     }
   }
@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "assume_role" {
 resource "aws_iam_role" "pcs_compute_role" {
   name_prefix        = "pcs-compute-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
-  path = "/aws-pcs/"
+  path               = "/aws-pcs/"
 }
 
 data "aws_iam_policy_document" "pcs_policy" {
@@ -26,9 +26,9 @@ data "aws_iam_policy_document" "pcs_policy" {
 }
 
 resource "aws_iam_role_policy" "pcs_policy" {
-  name        = "pcs_policy"
-  role        = aws_iam_role.pcs_compute_role.name
-  policy      = data.aws_iam_policy_document.pcs_policy.json
+  name   = "pcs_policy"
+  role   = aws_iam_role.pcs_compute_role.name
+  policy = data.aws_iam_policy_document.pcs_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "ssm" {

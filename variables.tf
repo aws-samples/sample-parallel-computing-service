@@ -32,8 +32,8 @@ variable "private_cidr" {
 
 variable "slurm_version" {
   description = "Slurm version"
-  type = string
-  default = "25.05"
+  type        = string
+  default     = "25.05"
 }
 
 variable "instance_login" {
@@ -44,36 +44,36 @@ variable "instance_login" {
 
 variable "instance_x86" {
   description = "Instance type of CPU X86_64 node(s)"
-  type        = list
+  type        = list(any)
   default     = ["hpc6a.48xlarge", "hpc7a.96xlarge", "hpc8a.96xlarge"]
 }
 
 variable "instance_arm" {
   description = "Instance type of CPU ARM64 node(s)"
-  type        = list
+  type        = list(any)
   default     = ["m8g.48xlarge"]
 }
 
 variable "instance_gpu" {
   description = "Instance type of GPU node(s)"
-  type        = list
+  type        = list(any)
   default     = ["g6.xlarge"]
 }
 
 variable "ssh_key" {
   description = "ssh public key for instances"
-  type = string
-  default = null
+  type        = string
+  default     = null
 }
 
 variable "s3_bucket" {
   description = "S3 bucket name"
-  type = string
-  default = null
+  type        = string
+  default     = null
 }
 
 variable "users" {
   description = "A LDIF file containing users of the cluster"
-  type = string
-  default = null
+  type        = string
+  default     = null
 }

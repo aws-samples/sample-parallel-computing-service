@@ -30,7 +30,7 @@ resource "aws_imagebuilder_image_pipeline" "wx_x86" {
   description                      = "Creates an Amazon Linux 2023 x86 image with PCS installed."
 
   schedule {
-    schedule_expression = "cron(0 8 ? * tue)"
+    schedule_expression                = "cron(0 8 ? * tue)"
     pipeline_execution_start_condition = "EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE"
   }
 }
@@ -67,44 +67,44 @@ data "aws_ami" "al2023_x86" {
 }
 
 resource "aws_imagebuilder_image_recipe" "wx_x86" {
-    block_device_mapping {
-      device_name = "/dev/xvda"
-      no_device = false
+  block_device_mapping {
+    device_name = "/dev/xvda"
+    no_device   = false
 
-      ebs {
-        delete_on_termination = true
-        volume_size           = 50
-        volume_type           = "gp3"
-      }
+    ebs {
+      delete_on_termination = true
+      volume_size           = 50
+      volume_type           = "gp3"
     }
+  }
 
-    component {
-      component_arn = aws_imagebuilder_component.wx.arn
-      parameter {
-        name = "BucketName"
-        value = var.s3_bucket
-      }
-      parameter {
-        name = "SlurmVersion"
-        value = var.slurm_version
-      }
-      parameter {
-        name = "ZFSDNS"
-        value = var.zfs_filesystem_dns
-      }
-      parameter {
-        name = "ZFSMnt"
-        value = var.zfs_filesystem_mnt
-      }
-      parameter {
-        name = "LDAPDNS"
-        value = var.ldap_dns
-      }
-      parameter {
-        name = "LDAPPassword"
-        value = var.ldap_password
-      }
+  component {
+    component_arn = aws_imagebuilder_component.wx.arn
+    parameter {
+      name  = "BucketName"
+      value = var.s3_bucket
     }
+    parameter {
+      name  = "SlurmVersion"
+      value = var.slurm_version
+    }
+    parameter {
+      name  = "ZFSDNS"
+      value = var.zfs_filesystem_dns
+    }
+    parameter {
+      name  = "ZFSMnt"
+      value = var.zfs_filesystem_mnt
+    }
+    parameter {
+      name  = "LDAPDNS"
+      value = var.ldap_dns
+    }
+    parameter {
+      name  = "LDAPPassword"
+      value = var.ldap_password
+    }
+  }
 
   name         = "amazon-linux-wx-x86"
   parent_image = data.aws_ami.al2023_x86.id
@@ -115,14 +115,14 @@ resource "aws_s3_object" "pcs_upload" {
   bucket = var.s3_bucket
   key    = "pcs-component.yaml"
   source = "${path.module}/pcs-component.yaml"
-  etag = filemd5("${path.module}/pcs-component.yaml")
+  etag   = filemd5("${path.module}/pcs-component.yaml")
 }
 
 resource "aws_imagebuilder_component" "wx" {
-  name       = "wx-pcs"
-  platform   = "Linux"
-  uri        = "s3://${var.s3_bucket}/pcs-component.yaml"
-  version    = "1.0.0"
+  name     = "wx-pcs"
+  platform = "Linux"
+  uri      = "s3://${var.s3_bucket}/pcs-component.yaml"
+  version  = "1.0.0"
 
   depends_on = [
     aws_s3_object.pcs_upload
@@ -180,17 +180,17 @@ resource "aws_iam_role_policy_attachment" "s3" {
 
 resource "aws_iam_instance_profile" "iam_instance_profile" {
   name_prefix = "pcs-instance-profile-imagebuilder"
-  role = aws_iam_role.imagebuilder.name
+  role        = aws_iam_role.imagebuilder.name
 }
 
 resource "aws_imagebuilder_infrastructure_configuration" "wx_x86" {
-  description           = "PCS infrastructure configuration"
-  instance_profile_name = aws_iam_instance_profile.iam_instance_profile.name
-  instance_types        = [var.x86_build_instance]
-  key_pair              = var.ssh_key
-  name                  = "wx-pcs-x86"
-  security_group_ids    = [var.public_sg_id]
-  subnet_id             = var.public_subnet_id
+  description                   = "PCS infrastructure configuration"
+  instance_profile_name         = aws_iam_instance_profile.iam_instance_profile.name
+  instance_types                = [var.x86_build_instance]
+  key_pair                      = var.ssh_key
+  name                          = "wx-pcs-x86"
+  security_group_ids            = [var.public_sg_id]
+  subnet_id                     = var.public_subnet_id
   terminate_instance_on_failure = true
 
   logging {
@@ -206,7 +206,7 @@ resource "aws_imagebuilder_distribution_configuration" "wx" {
 
   distribution {
     ami_distribution_configuration {
-     ami_tags = {
+      ami_tags = {
         Project = "WX PCS"
       }
 
@@ -228,7 +228,7 @@ resource "aws_imagebuilder_image_pipeline" "wx_arm" {
   description                      = "Creates an Amazon Linux 2023 ARM image with PCS installed."
 
   schedule {
-    schedule_expression = "cron(0 8 ? * tue)"
+    schedule_expression                = "cron(0 8 ? * tue)"
     pipeline_execution_start_condition = "EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE"
   }
 }
@@ -248,44 +248,44 @@ resource "aws_imagebuilder_image" "wx_arm" {
 }
 
 resource "aws_imagebuilder_image_recipe" "wx_arm" {
-    block_device_mapping {
-      device_name = "/dev/xvda"
-      no_device = false
+  block_device_mapping {
+    device_name = "/dev/xvda"
+    no_device   = false
 
-      ebs {
-        delete_on_termination = true
-        volume_size           = 50
-        volume_type           = "gp3"
-      }
+    ebs {
+      delete_on_termination = true
+      volume_size           = 50
+      volume_type           = "gp3"
     }
+  }
 
-    component {
-      component_arn = aws_imagebuilder_component.wx.arn
-      parameter {
-        name = "BucketName"
-        value = var.s3_bucket
-      }
-      parameter {
-        name = "SlurmVersion"
-        value = var.slurm_version
-      }
-      parameter {
-        name = "ZFSDNS"
-        value = var.zfs_filesystem_dns
-      }
-      parameter {
-        name = "ZFSMnt"
-        value = var.zfs_filesystem_mnt
-      }
-      parameter {
-        name = "LDAPDNS"
-        value = var.ldap_dns
-      }
-      parameter {
-        name = "LDAPPassword"
-        value = var.ldap_password
-      }
+  component {
+    component_arn = aws_imagebuilder_component.wx.arn
+    parameter {
+      name  = "BucketName"
+      value = var.s3_bucket
     }
+    parameter {
+      name  = "SlurmVersion"
+      value = var.slurm_version
+    }
+    parameter {
+      name  = "ZFSDNS"
+      value = var.zfs_filesystem_dns
+    }
+    parameter {
+      name  = "ZFSMnt"
+      value = var.zfs_filesystem_mnt
+    }
+    parameter {
+      name  = "LDAPDNS"
+      value = var.ldap_dns
+    }
+    parameter {
+      name  = "LDAPPassword"
+      value = var.ldap_password
+    }
+  }
 
   name         = "amazon-linux-wx-arm"
   parent_image = data.aws_ami.al2023_arm.id
@@ -293,13 +293,13 @@ resource "aws_imagebuilder_image_recipe" "wx_arm" {
 }
 
 resource "aws_imagebuilder_infrastructure_configuration" "wx_arm" {
-  description           = "PCS infrastructure configuration"
-  instance_profile_name = aws_iam_instance_profile.iam_instance_profile.name
-  instance_types        = [var.arm_build_instance]
-  key_pair              = var.ssh_key
-  name                  = "wx-pcs-arm"
-  security_group_ids    = [var.public_sg_id]
-  subnet_id             = var.public_subnet_id
+  description                   = "PCS infrastructure configuration"
+  instance_profile_name         = aws_iam_instance_profile.iam_instance_profile.name
+  instance_types                = [var.arm_build_instance]
+  key_pair                      = var.ssh_key
+  name                          = "wx-pcs-arm"
+  security_group_ids            = [var.public_sg_id]
+  subnet_id                     = var.public_subnet_id
   terminate_instance_on_failure = true
 
   logging {

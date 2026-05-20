@@ -42,16 +42,16 @@ resource "aws_launch_template" "pcs_login" {
 
   network_interfaces {
     associate_public_ip_address = true
-    device_index = 0
-    network_card_index = 0
+    device_index                = 0
+    network_card_index          = 0
     security_groups = [
       var.public_sg_id
     ]
   }
 
   user_data = base64encode(templatefile("${local.login_instance_template}", {
-    zfs_dns = var.zfs_filesystem_dns
-    zfs_mnt = var.zfs_filesystem_mnt
+    zfs_dns    = var.zfs_filesystem_dns
+    zfs_mnt    = var.zfs_filesystem_mnt
     lustre_dns = var.lustre_filesystem_dns
     lustre_mnt = var.lustre_filesystem_mnt
   }))
@@ -59,14 +59,14 @@ resource "aws_launch_template" "pcs_login" {
 }
 
 resource "awscc_pcs_compute_node_group" "login" {
-  name = "login"
+  name       = "login"
   cluster_id = awscc_pcs_cluster.wx.name
   custom_launch_template = {
     template_id = aws_launch_template.pcs_login.id
-    version = aws_launch_template.pcs_login.latest_version
+    version     = aws_launch_template.pcs_login.latest_version
   }
   iam_instance_profile_arn = var.pcs_compute_profile_arn
-  ami_id = var.ami_id_x86
+  ami_id                   = var.ami_id_x86
   instance_configs = [
     {
       instance_type = var.instance_login
@@ -74,9 +74,9 @@ resource "awscc_pcs_compute_node_group" "login" {
   ]
   scaling_configuration = {
     min_instance_count = 1,
-    max_instance_count  = 1
+    max_instance_count = 1
   }
-  subnet_ids = [var.public_subnet_id]
+  subnet_ids      = [var.public_subnet_id]
   purchase_option = "ONDEMAND"
 }
 
@@ -87,19 +87,19 @@ resource "aws_placement_group" "pcs" {
 
 locals {
   all_instances = toset(concat(var.instance_x86, var.instance_arm, var.instance_gpu))
-  nics = {for instance in local.all_instances:
-    instance => range(0, data.aws_ec2_instance_type.all[instance].maximum_network_cards)}
-  cores = {for instance in local.all_instances:
-    instance => data.aws_ec2_instance_type.all[instance].default_cores}
+  nics = { for instance in local.all_instances :
+  instance => range(0, data.aws_ec2_instance_type.all[instance].maximum_network_cards) }
+  cores = { for instance in local.all_instances :
+  instance => data.aws_ec2_instance_type.all[instance].default_cores }
 }
 
 data "aws_ec2_instance_type" "all" {
-  for_each = local.all_instances
+  for_each      = local.all_instances
   instance_type = each.value
 }
 
 resource "aws_launch_template" "pcs" {
-  for_each = local.all_instances
+  for_each    = local.all_instances
   name_prefix = "pcs-${each.value}"
 
   metadata_options {
@@ -132,31 +132,31 @@ resource "aws_launch_template" "pcs" {
     iterator = nic
     content {
       associate_public_ip_address = false
-      device_index = tonumber(nic.value) >= 1 ? "1" : "0"
-      network_card_index = tonumber(nic.value)
-      interface_type = "efa"
-      security_groups = var.private_sg_ids
+      device_index                = tonumber(nic.value) >= 1 ? "1" : "0"
+      network_card_index          = tonumber(nic.value)
+      interface_type              = "efa"
+      security_groups             = var.private_sg_ids
     }
   }
 
   user_data = base64encode(templatefile("${path.module}/templates/${each.value}.userdata.tpl", {
-    zfs_dns = var.zfs_filesystem_dns
-    zfs_mnt = var.zfs_filesystem_mnt
+    zfs_dns    = var.zfs_filesystem_dns
+    zfs_mnt    = var.zfs_filesystem_mnt
     lustre_dns = var.lustre_filesystem_dns
     lustre_mnt = var.lustre_filesystem_mnt
   }))
 }
 
 resource "awscc_pcs_compute_node_group" "x86" {
-  for_each = toset(var.instance_x86)
-  name = split(".", each.value)[0]
+  for_each   = toset(var.instance_x86)
+  name       = split(".", each.value)[0]
   cluster_id = awscc_pcs_cluster.wx.name
   custom_launch_template = {
     template_id = aws_launch_template.pcs[each.value].id
-    version = aws_launch_template.pcs[each.value].latest_version
+    version     = aws_launch_template.pcs[each.value].latest_version
   }
   iam_instance_profile_arn = var.pcs_compute_profile_arn
-  ami_id = var.ami_id_x86
+  ami_id                   = var.ami_id_x86
   instance_configs = [
     {
       instance_type = each.value
@@ -164,9 +164,9 @@ resource "awscc_pcs_compute_node_group" "x86" {
   ]
   scaling_configuration = {
     min_instance_count = 0,
-    max_instance_count  = 10
+    max_instance_count = 10
   }
-  subnet_ids = [var.private_subnet_id]
+  subnet_ids      = [var.private_subnet_id]
   purchase_option = "ONDEMAND"
 }
 
@@ -174,14 +174,14 @@ resource "awscc_pcs_queue" "x86" {
   cluster_id = awscc_pcs_cluster.wx.cluster_id
   name       = "x86"
   compute_node_group_configurations = [
-    for ng in awscc_pcs_compute_node_group.x86:
-    {compute_node_group_id = ng.compute_node_group_id}
+    for ng in awscc_pcs_compute_node_group.x86 :
+    { compute_node_group_id = ng.compute_node_group_id }
   ]
 
   slurm_configuration = {
     slurm_custom_settings = [
       {
-        parameter_name = "Default"
+        parameter_name  = "Default"
         parameter_value = "YES"
       }
     ]
@@ -191,15 +191,15 @@ resource "awscc_pcs_queue" "x86" {
 }
 
 resource "awscc_pcs_compute_node_group" "arm" {
-  for_each = toset(var.instance_arm)
-  name = split(".", each.value)[0]
+  for_each   = toset(var.instance_arm)
+  name       = split(".", each.value)[0]
   cluster_id = awscc_pcs_cluster.wx.name
   custom_launch_template = {
     template_id = aws_launch_template.pcs[each.value].id
-    version = aws_launch_template.pcs[each.value].latest_version
+    version     = aws_launch_template.pcs[each.value].latest_version
   }
   iam_instance_profile_arn = var.pcs_compute_profile_arn
-  ami_id = var.ami_id_arm
+  ami_id                   = var.ami_id_arm
   instance_configs = [
     {
       instance_type = each.value
@@ -207,9 +207,9 @@ resource "awscc_pcs_compute_node_group" "arm" {
   ]
   scaling_configuration = {
     min_instance_count = 0,
-    max_instance_count  = 10
+    max_instance_count = 10
   }
-  subnet_ids = [var.private_subnet_id]
+  subnet_ids      = [var.private_subnet_id]
   purchase_option = "ONDEMAND"
 }
 
@@ -217,8 +217,8 @@ resource "awscc_pcs_queue" "arm" {
   cluster_id = awscc_pcs_cluster.wx.cluster_id
   name       = "arm"
   compute_node_group_configurations = [
-    for ng in awscc_pcs_compute_node_group.arm:
-    {compute_node_group_id = ng.compute_node_group_id}
+    for ng in awscc_pcs_compute_node_group.arm :
+    { compute_node_group_id = ng.compute_node_group_id }
   ]
 
   depends_on = [awscc_pcs_cluster.wx]
