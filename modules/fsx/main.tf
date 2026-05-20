@@ -121,18 +121,18 @@ resource "aws_vpc_security_group_egress_rule" "zfs_allow_egress" {
 }
 
 resource "aws_fsx_openzfs_file_system" "fsxz" {
-  storage_capacity    = 1024
+  storage_capacity    = var.fsxz.storage_capacity
   subnet_ids          = [var.private_subnet_id]
-  deployment_type     = "SINGLE_AZ_HA_2"
+  deployment_type     = var.fsxz.deployment_type
   delete_options      = ["DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"]
-  throughput_capacity = 2560
+  throughput_capacity = var.fsxz.throughput_capacity
   security_group_ids  = [aws_security_group.zfs.id]
   root_volume_configuration {
-    data_compression_type = "ZSTD"
+    data_compression_type = var.fsxz.data_compression_type
     nfs_exports {
       client_configurations {
         clients = var.vpc_cidr
-        options = ["sync", "crossmnt", "no_root_squash"]
+        options = var.fsxz.nfs_options
       }
     }
   }
@@ -141,11 +141,11 @@ resource "aws_fsx_openzfs_file_system" "fsxz" {
 resource "aws_fsx_openzfs_volume" "sw" {
   name                  = "sw"
   parent_volume_id      = aws_fsx_openzfs_file_system.fsxz.root_volume_id
-  data_compression_type = "ZSTD"
+  data_compression_type = var.fsxz.data_compression_type
   nfs_exports {
     client_configurations {
       clients = var.vpc_cidr
-      options = ["sync", "crossmnt", "no_root_squash", "rw"]
+      options = var.fsxz.volume_nfs_options
     }
   }
 }
@@ -153,11 +153,11 @@ resource "aws_fsx_openzfs_volume" "sw" {
 resource "aws_fsx_openzfs_volume" "home" {
   name                  = "home"
   parent_volume_id      = aws_fsx_openzfs_file_system.fsxz.root_volume_id
-  data_compression_type = "ZSTD"
+  data_compression_type = var.fsxz.data_compression_type
   nfs_exports {
     client_configurations {
       clients = var.vpc_cidr
-      options = ["sync", "crossmnt", "no_root_squash", "rw"]
+      options = var.fsxz.volume_nfs_options
     }
   }
 }
@@ -203,22 +203,22 @@ resource "aws_vpc_security_group_egress_rule" "fsxl_allow_egress_efa" {
 }
 
 resource "aws_fsx_lustre_file_system" "fsxl" {
-  deployment_type       = "PERSISTENT_2"
-  data_compression_type = "LZ4"
-  efa_enabled           = true
+  deployment_type       = var.fsxl.deployment_type
+  data_compression_type = var.fsxl.data_compression_type
+  efa_enabled           = var.fsxl.efa_enabled
   security_group_ids    = [aws_security_group.fsxl.id]
-  storage_type          = "INTELLIGENT_TIERING"
+  storage_type          = var.fsxl.storage_type
   subnet_ids            = [var.private_subnet_id]
-  throughput_capacity   = 4000
+  throughput_capacity   = var.fsxl.throughput_capacity
 
   data_read_cache_configuration {
-    sizing_mode = "USER_PROVISIONED"
-    size        = 20000
+    sizing_mode = var.fsxl.data_read_cache.sizing_mode
+    size        = var.fsxl.data_read_cache.size
   }
 
   metadata_configuration {
-    iops = 6000
-    mode = "USER_PROVISIONED"
+    iops = var.fsxl.metadata.iops
+    mode = var.fsxl.metadata.mode
   }
 }
 
