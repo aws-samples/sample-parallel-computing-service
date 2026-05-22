@@ -1,3 +1,7 @@
+locals {
+  created_date = var.created_date != "" ? var.created_date : formatdate("YYYYMMDD", plantimestamp())
+}
+
 module "vpc" {
   source = "./modules/vpc"
 

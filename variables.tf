@@ -1,3 +1,7 @@
+variable "created_date" {
+  type    = string
+  default = ""
+}
 
 variable "profile" {
   type        = string
@@ -33,7 +37,7 @@ variable "private_cidr" {
 variable "slurm_version" {
   description = "Slurm version"
   type        = string
-  default     = "25.05"
+  default     = "25.11"
 }
 
 variable "instance_login" {

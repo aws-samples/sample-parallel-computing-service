@@ -12,6 +12,22 @@ resource "awscc_pcs_cluster" "wx" {
   }
 
   size = "SMALL"
+
+  slurm_configuration = {
+    accounting = {
+      mode                       = "STANDARD"
+      default_purge_time_in_days = 7
+    }
+
+    slurm_rest = {
+      mode = "STANDARD"
+    }
+
+    slurm_custom_settings = [
+      { parameter_name = "MetricsType", parameter_value = "metrics/openmetrics" },
+      { parameter_name = "CommunicationParameters", parameter_value = "enable_http" }
+    ]
+  }
 }
 
 locals {
