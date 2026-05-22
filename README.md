@@ -4,7 +4,7 @@ This reposity contains sample Terraform to deploy a cluster
 using AWS Parallel Computing Service.
 
 ## Architure
-![Architure](WX_PCS.png)
+![Architure](PCS_Arch.png)
 
 The architure consistes of
 - An LDAP server for authentication and authorization.
