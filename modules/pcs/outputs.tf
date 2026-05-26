@@ -1,16 +1,16 @@
 output "pcs_cluster_id" {
   description = "ID of the AWS Parallel Computing Service cluster"
-  value       = awscc_pcs_cluster.wx.cluster_id
+  value       = awscc_pcs_cluster.pcs.cluster_id
 }
 
 output "pcs_cluster_status" {
   description = "Status of the AWS Parallel Computing Service cluster"
-  value       = awscc_pcs_cluster.wx.status
+  value       = awscc_pcs_cluster.pcs.status
 }
 
 output "pcs_cluster_console_url" {
   description = "URL for the AWS Parallel Computing Service console"
-  value       = "https://console.aws.amazon.com/pcs/home?region=${var.region}#/clusters/${awscc_pcs_cluster.wx.cluster_id}"
+  value       = "https://console.aws.amazon.com/pcs/home?region=${var.region}#/clusters/${awscc_pcs_cluster.pcs.cluster_id}"
 }
 
 output "pcs_ec2_console_url" {
@@ -21,4 +21,6 @@ output "pcs_ec2_console_url" {
 output "instance_nics" {
   value = local.nics
 }
-
+output "login_public_ips" {
+  value = data.aws_instances.login.public_ips
+}

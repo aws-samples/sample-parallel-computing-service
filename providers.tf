@@ -8,6 +8,7 @@ provider "aws" {
   profile = var.profile
   default_tags {
     tags = {
+      project = var.project
       created = local.created_date
     }
   }

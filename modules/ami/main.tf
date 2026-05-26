@@ -22,10 +22,10 @@ data "aws_iam_policy_document" "image_builder" {
   }
 }
 
-resource "aws_imagebuilder_image_pipeline" "wx_x86" {
-  image_recipe_arn                 = aws_imagebuilder_image_recipe.wx_x86.arn
-  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.wx_x86.arn
-  name                             = "wx_x86"
+resource "aws_imagebuilder_image_pipeline" "pcs_x86" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.pcs_x86.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.pcs_x86.arn
+  name                             = "pcs_x86"
   status                           = "ENABLED"
   description                      = "Creates an Amazon Linux 2023 x86 image with PCS installed."
 
@@ -35,10 +35,10 @@ resource "aws_imagebuilder_image_pipeline" "wx_x86" {
   }
 }
 
-resource "aws_imagebuilder_image" "wx_x86" {
-  distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.wx.arn
-  image_recipe_arn                 = aws_imagebuilder_image_recipe.wx_x86.arn
-  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.wx_x86.arn
+resource "aws_imagebuilder_image" "pcs_x86" {
+  distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.pcs.arn
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.pcs_x86.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.pcs_x86.arn
 
   depends_on = [
     data.aws_iam_policy_document.image_builder
@@ -66,7 +66,7 @@ data "aws_ami" "al2023_x86" {
   owners = ["137112412989"] # AWS
 }
 
-resource "aws_imagebuilder_image_recipe" "wx_x86" {
+resource "aws_imagebuilder_image_recipe" "pcs_x86" {
   block_device_mapping {
     device_name = "/dev/xvda"
     no_device   = false
@@ -79,7 +79,7 @@ resource "aws_imagebuilder_image_recipe" "wx_x86" {
   }
 
   component {
-    component_arn = aws_imagebuilder_component.wx.arn
+    component_arn = aws_imagebuilder_component.pcs.arn
     parameter {
       name  = "BucketName"
       value = var.s3_bucket
@@ -106,7 +106,7 @@ resource "aws_imagebuilder_image_recipe" "wx_x86" {
     }
   }
 
-  name         = "amazon-linux-wx-x86"
+  name         = "amazon-linux-pcs-x86"
   parent_image = data.aws_ami.al2023_x86.id
   version      = var.image_receipe_version
 }
@@ -118,8 +118,8 @@ resource "aws_s3_object" "pcs_upload" {
   etag   = filemd5("${path.module}/pcs-component.yaml")
 }
 
-resource "aws_imagebuilder_component" "wx" {
-  name     = "wx-pcs"
+resource "aws_imagebuilder_component" "pcs" {
+  name     = "pcs"
   platform = "Linux"
   uri      = "s3://${var.s3_bucket}/pcs-component.yaml"
   version  = "1.0.0"
@@ -183,12 +183,12 @@ resource "aws_iam_instance_profile" "iam_instance_profile" {
   role        = aws_iam_role.imagebuilder.name
 }
 
-resource "aws_imagebuilder_infrastructure_configuration" "wx_x86" {
+resource "aws_imagebuilder_infrastructure_configuration" "pcs_x86" {
   description                   = "PCS infrastructure configuration"
   instance_profile_name         = aws_iam_instance_profile.iam_instance_profile.name
   instance_types                = [var.x86_build_instance]
   key_pair                      = var.ssh_key
-  name                          = "wx-pcs-x86"
+  name                          = "pcs-x86"
   security_group_ids            = [var.public_sg_id]
   subnet_id                     = var.public_subnet_id
   terminate_instance_on_failure = true
@@ -201,16 +201,16 @@ resource "aws_imagebuilder_infrastructure_configuration" "wx_x86" {
   }
 }
 
-resource "aws_imagebuilder_distribution_configuration" "wx" {
-  name = "wx-pcs-local-distribution"
+resource "aws_imagebuilder_distribution_configuration" "pcs" {
+  name = "pcs-local-distribution"
 
   distribution {
     ami_distribution_configuration {
       ami_tags = {
-        Project = "WX PCS"
+        Project = "PCS"
       }
 
-      name = "wx-psc-{{ imagebuilder:buildDate }}"
+      name = "pcs-{{ imagebuilder:buildDate }}"
 
       launch_permission {
         user_ids = ["905784713722"]
@@ -220,10 +220,10 @@ resource "aws_imagebuilder_distribution_configuration" "wx" {
   }
 }
 
-resource "aws_imagebuilder_image_pipeline" "wx_arm" {
-  image_recipe_arn                 = aws_imagebuilder_image_recipe.wx_arm.arn
-  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.wx_arm.arn
-  name                             = "wx_arm"
+resource "aws_imagebuilder_image_pipeline" "pcs_arm" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.pcs_arm.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.pcs_arm.arn
+  name                             = "pcs_arm"
   status                           = "ENABLED"
   description                      = "Creates an Amazon Linux 2023 ARM image with PCS installed."
 
@@ -233,10 +233,10 @@ resource "aws_imagebuilder_image_pipeline" "wx_arm" {
   }
 }
 
-resource "aws_imagebuilder_image" "wx_arm" {
-  distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.wx.arn
-  image_recipe_arn                 = aws_imagebuilder_image_recipe.wx_arm.arn
-  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.wx_arm.arn
+resource "aws_imagebuilder_image" "pcs_arm" {
+  distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.pcs.arn
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.pcs_arm.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.pcs_arm.arn
 
   depends_on = [
     data.aws_iam_policy_document.image_builder
@@ -247,7 +247,7 @@ resource "aws_imagebuilder_image" "wx_arm" {
   }
 }
 
-resource "aws_imagebuilder_image_recipe" "wx_arm" {
+resource "aws_imagebuilder_image_recipe" "pcs_arm" {
   block_device_mapping {
     device_name = "/dev/xvda"
     no_device   = false
@@ -260,7 +260,7 @@ resource "aws_imagebuilder_image_recipe" "wx_arm" {
   }
 
   component {
-    component_arn = aws_imagebuilder_component.wx.arn
+    component_arn = aws_imagebuilder_component.pcs.arn
     parameter {
       name  = "BucketName"
       value = var.s3_bucket
@@ -287,17 +287,17 @@ resource "aws_imagebuilder_image_recipe" "wx_arm" {
     }
   }
 
-  name         = "amazon-linux-wx-arm"
+  name         = "amazon-linux-pcs-arm"
   parent_image = data.aws_ami.al2023_arm.id
   version      = var.image_receipe_version
 }
 
-resource "aws_imagebuilder_infrastructure_configuration" "wx_arm" {
+resource "aws_imagebuilder_infrastructure_configuration" "pcs_arm" {
   description                   = "PCS infrastructure configuration"
   instance_profile_name         = aws_iam_instance_profile.iam_instance_profile.name
   instance_types                = [var.arm_build_instance]
   key_pair                      = var.ssh_key
-  name                          = "wx-pcs-arm"
+  name                          = "pcs-arm"
   security_group_ids            = [var.public_sg_id]
   subnet_id                     = var.public_subnet_id
   terminate_instance_on_failure = true

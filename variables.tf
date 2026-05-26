@@ -3,6 +3,12 @@ variable "created_date" {
   default = ""
 }
 
+variable "project" {
+  type        = string
+  description = "The project name."
+  default     = null
+}
+
 variable "profile" {
   type        = string
   description = "The AWS profile used to deploy the clusters."
