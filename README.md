@@ -31,9 +31,14 @@ has the following components installed
 
 Top-level variables should be set in the `terraform.tfvars` file before deployment.
 The most important ones are
+- `project`
+- `created_date`
 - `region` & `availability_zone`
 - `ssh_key`
 - `users`
+
+The `project` is used as a toplevel name for all the resources, while the `created_date` is applied
+as a tag to all resources.
 
 The `region` and `availability_zone` are the AWS Region and Availability Zone the cluster should
 be deployed in.
@@ -92,6 +97,9 @@ terraform init
 terraform plan
 terraform apply -auto-approve
 ```
+
+Once the stack has been deployed, the external IP addresses of the login nodes
+will be listed in the outputs `pcs_login_public_ips`.
 
 # Dependency Graph
 

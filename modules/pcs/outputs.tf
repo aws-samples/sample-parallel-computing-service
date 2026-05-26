@@ -21,3 +21,6 @@ output "pcs_ec2_console_url" {
 output "instance_nics" {
   value = local.nics
 }
+output "login_public_ips" {
+  value = data.aws_instances.login.public_ips
+}

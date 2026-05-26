@@ -1,3 +1,9 @@
+variable "project" {
+  type        = string
+  description = "The project name."
+  default     = null
+}
+
 variable "region" {
   type    = string
   default = "us-east-2"

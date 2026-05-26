@@ -1,5 +1,6 @@
 resource "awscc_pcs_cluster" "pcs" {
   name = "pcs-cluster"
+  tags = { project = var.project }
 
   networking = {
     subnet_ids         = [var.public_subnet_id]
@@ -40,6 +41,7 @@ locals {
 
 resource "aws_launch_template" "pcs_login" {
   name_prefix = "pcs-login"
+  tags        = { project = var.project }
 
   metadata_options {
     http_endpoint               = "enabled"
@@ -77,6 +79,7 @@ resource "aws_launch_template" "pcs_login" {
 resource "awscc_pcs_compute_node_group" "login" {
   name       = "login"
   cluster_id = awscc_pcs_cluster.pcs.name
+  tags = { project = var.project }
   custom_launch_template = {
     template_id = aws_launch_template.pcs_login.id
     version     = aws_launch_template.pcs_login.latest_version
@@ -99,6 +102,7 @@ resource "awscc_pcs_compute_node_group" "login" {
 resource "aws_placement_group" "pcs" {
   name     = "pcs"
   strategy = "cluster"
+  tags     = { project = var.project }
 }
 
 locals {
@@ -117,6 +121,7 @@ data "aws_ec2_instance_type" "all" {
 resource "aws_launch_template" "pcs" {
   for_each    = local.all_instances
   name_prefix = "pcs-${each.value}"
+  tags        = { project = var.project }
 
   metadata_options {
     http_endpoint               = "enabled"
@@ -167,6 +172,7 @@ resource "awscc_pcs_compute_node_group" "x86" {
   for_each   = toset(var.instance_x86)
   name       = split(".", each.value)[0]
   cluster_id = awscc_pcs_cluster.pcs.name
+  tags = { project = var.project }
   custom_launch_template = {
     template_id = aws_launch_template.pcs[each.value].id
     version     = aws_launch_template.pcs[each.value].latest_version
@@ -189,6 +195,7 @@ resource "awscc_pcs_compute_node_group" "x86" {
 resource "awscc_pcs_queue" "x86" {
   cluster_id = awscc_pcs_cluster.pcs.cluster_id
   name       = "x86"
+  tags = { project = var.project }
   compute_node_group_configurations = [
     for ng in awscc_pcs_compute_node_group.x86 :
     { compute_node_group_id = ng.compute_node_group_id }
@@ -210,6 +217,7 @@ resource "awscc_pcs_compute_node_group" "arm" {
   for_each   = toset(var.instance_arm)
   name       = split(".", each.value)[0]
   cluster_id = awscc_pcs_cluster.pcs.name
+  tags = { project = var.project }
   custom_launch_template = {
     template_id = aws_launch_template.pcs[each.value].id
     version     = aws_launch_template.pcs[each.value].latest_version
@@ -232,10 +240,22 @@ resource "awscc_pcs_compute_node_group" "arm" {
 resource "awscc_pcs_queue" "arm" {
   cluster_id = awscc_pcs_cluster.pcs.cluster_id
   name       = "arm"
+  tags = { project = var.project }
   compute_node_group_configurations = [
     for ng in awscc_pcs_compute_node_group.arm :
     { compute_node_group_id = ng.compute_node_group_id }
   ]
 
   depends_on = [awscc_pcs_cluster.pcs]
+}
+
+data "aws_instances" "login" {
+  filter {
+    name   = "tag:aws:pcs:compute-node-group-id"
+    values = [awscc_pcs_compute_node_group.login.compute_node_group_id]
+  }
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
 }

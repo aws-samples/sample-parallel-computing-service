@@ -33,3 +33,6 @@ output "pcs_ec2_console_url" {
   value       = module.pcs.pcs_ec2_console_url
 }
 
+output "pcs_login_public_ips" {
+  value = module.pcs.login_public_ips
+}
