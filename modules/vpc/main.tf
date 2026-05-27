@@ -4,7 +4,7 @@ resource "aws_vpc" "pcs" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = "pcs"
+    Name = "${var.project}-vpc"
   }
 }
 
@@ -18,7 +18,7 @@ resource "aws_subnet" "pcs_public" {
   cidr_block              = var.public_cidr
   map_public_ip_on_launch = true
   tags = {
-    Name = "pcs"
+    Name = "${var.project}-public"
   }
   depends_on = [aws_internet_gateway.pcs]
 }
@@ -28,7 +28,7 @@ resource "aws_subnet" "pcs_private" {
   availability_zone = var.availability_zone
   cidr_block        = var.private_cidr
   tags = {
-    Name = "pcs"
+    Name = "${var.project}-private"
   }
   depends_on = [aws_internet_gateway.pcs]
 }
@@ -79,7 +79,7 @@ locals {
 }
 
 resource "aws_security_group" "pcs_public" {
-  name   = "aws_public_compute_environment_security_group"
+  name   = "${var.project}-public-sg"
   vpc_id = aws_vpc.pcs.id
 }
 
@@ -102,7 +102,7 @@ resource "aws_vpc_security_group_egress_rule" "pcs_public_allow_egress" {
 }
 
 resource "aws_security_group" "pcs_private" {
-  name   = "aws_private_compute_environment_security_group"
+  name   = "${var.project}-private-sg"
   vpc_id = aws_vpc.pcs.id
 }
 

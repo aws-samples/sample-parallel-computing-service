@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "image_builder" {
 resource "aws_imagebuilder_image_pipeline" "pcs_x86" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.pcs_x86.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.pcs_x86.arn
-  name                             = "pcs_x86"
+  name                             = "${var.project}-x86"
   status                           = "ENABLED"
   description                      = "Creates an Amazon Linux 2023 x86 image with PCS installed."
 
@@ -106,7 +106,7 @@ resource "aws_imagebuilder_image_recipe" "pcs_x86" {
     }
   }
 
-  name         = "amazon-linux-pcs-x86"
+  name         = "${var.project}-x86"
   parent_image = data.aws_ami.al2023_x86.id
   version      = var.image_receipe_version
 }
@@ -119,7 +119,7 @@ resource "aws_s3_object" "pcs_upload" {
 }
 
 resource "aws_imagebuilder_component" "pcs" {
-  name     = "pcs"
+  name     = "${var.project}-component"
   platform = "Linux"
   uri      = "s3://${var.s3_bucket}/pcs-component.yaml"
   version  = "1.0.0"
@@ -141,7 +141,7 @@ data "aws_iam_policy_document" "assume" {
 }
 
 resource "aws_iam_role" "imagebuilder" {
-  name_prefix        = "pcs-imagebuilder-role"
+  name_prefix        = "${var.project}-imagebuilder-role"
   assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
@@ -168,7 +168,7 @@ data "aws_iam_policy_document" "s3" {
 }
 
 resource "aws_iam_policy" "s3" {
-  name_prefix = "pcs-s3-access"
+  name_prefix = "${var.project}-s3-access"
   description = "Allow all S3 access"
   policy      = data.aws_iam_policy_document.s3.json
 }
@@ -179,7 +179,7 @@ resource "aws_iam_role_policy_attachment" "s3" {
 }
 
 resource "aws_iam_instance_profile" "iam_instance_profile" {
-  name_prefix = "pcs-instance-profile-imagebuilder"
+  name_prefix = "${var.project}-imagebuilder-profile"
   role        = aws_iam_role.imagebuilder.name
 }
 
@@ -188,7 +188,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "pcs_x86" {
   instance_profile_name         = aws_iam_instance_profile.iam_instance_profile.name
   instance_types                = [var.x86_build_instance]
   key_pair                      = var.ssh_key
-  name                          = "pcs-x86"
+  name                          = "${var.project}-x86"
   security_group_ids            = [var.public_sg_id]
   subnet_id                     = var.public_subnet_id
   terminate_instance_on_failure = true
@@ -202,7 +202,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "pcs_x86" {
 }
 
 resource "aws_imagebuilder_distribution_configuration" "pcs" {
-  name = "pcs-local-distribution"
+  name = "${var.project}-distribution"
 
   distribution {
     ami_distribution_configuration {
@@ -210,7 +210,7 @@ resource "aws_imagebuilder_distribution_configuration" "pcs" {
         Project = "PCS"
       }
 
-      name = "pcs-{{ imagebuilder:buildDate }}"
+      name = "${var.project}-{{ imagebuilder:buildDate }}"
 
       launch_permission {
         user_ids = ["905784713722"]
@@ -223,7 +223,7 @@ resource "aws_imagebuilder_distribution_configuration" "pcs" {
 resource "aws_imagebuilder_image_pipeline" "pcs_arm" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.pcs_arm.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.pcs_arm.arn
-  name                             = "pcs_arm"
+  name                             = "${var.project}-arm"
   status                           = "ENABLED"
   description                      = "Creates an Amazon Linux 2023 ARM image with PCS installed."
 
@@ -287,7 +287,7 @@ resource "aws_imagebuilder_image_recipe" "pcs_arm" {
     }
   }
 
-  name         = "amazon-linux-pcs-arm"
+  name         = "${var.project}-arm"
   parent_image = data.aws_ami.al2023_arm.id
   version      = var.image_receipe_version
 }
@@ -297,7 +297,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "pcs_arm" {
   instance_profile_name         = aws_iam_instance_profile.iam_instance_profile.name
   instance_types                = [var.arm_build_instance]
   key_pair                      = var.ssh_key
-  name                          = "pcs-arm"
+  name                          = "${var.project}-arm"
   security_group_ids            = [var.public_sg_id]
   subnet_id                     = var.public_subnet_id
   terminate_instance_on_failure = true

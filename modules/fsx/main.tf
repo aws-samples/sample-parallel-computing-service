@@ -95,7 +95,7 @@ locals {
 }
 
 resource "aws_security_group" "zfs" {
-  name        = "aws_zfs_security_group"
+  name        = "${var.project}-zfs-sg"
   vpc_id      = var.vpc_id
   description = "Security group for Amazon FSx OpenZFS file system"
 }
@@ -163,7 +163,7 @@ resource "aws_fsx_openzfs_volume" "home" {
 }
 
 resource "aws_security_group" "fsxl" {
-  name        = "aws_fsx_lustre_security_group"
+  name        = "${var.project}-lustre-sg"
   vpc_id      = var.vpc_id
   description = "Security group for Amazon FSx Lustre file system"
 }

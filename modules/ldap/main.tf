@@ -23,7 +23,7 @@ resource "random_password" "ldap_password" {
 }
 
 resource "aws_secretsmanager_secret" "ldap_password" {
-  name                           = "ldap_password"
+  name                           = "${var.project}-ldap-password"
   recovery_window_in_days        = 0
   force_overwrite_replica_secret = true
 }
@@ -64,7 +64,7 @@ resource "aws_instance" "ldap" {
     http_tokens                 = "required"
   }
   tags = {
-    Name = "LDAP Server"
+    Name = "${var.project}-ldap"
   }
 }
 
