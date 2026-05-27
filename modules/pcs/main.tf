@@ -1,5 +1,5 @@
 resource "awscc_pcs_cluster" "pcs" {
-  name = "pcs-cluster"
+  name = "${var.project}-cluster"
   tags = { project = var.project }
 
   networking = {
@@ -40,8 +40,15 @@ locals {
 }
 
 resource "aws_launch_template" "pcs_login" {
-  name_prefix = "pcs-login"
+  name_prefix = "${var.project}-login"
   tags        = { project = var.project }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${var.project}-login"
+    }
+  }
 
   metadata_options {
     http_endpoint               = "enabled"
@@ -77,9 +84,9 @@ resource "aws_launch_template" "pcs_login" {
 }
 
 resource "awscc_pcs_compute_node_group" "login" {
-  name       = "login"
+  name       = "${var.project}-login"
   cluster_id = awscc_pcs_cluster.pcs.name
-  tags = { project = var.project }
+  tags = { project = var.project, Name = "${var.project}-login" }
   custom_launch_template = {
     template_id = aws_launch_template.pcs_login.id
     version     = aws_launch_template.pcs_login.latest_version
@@ -100,7 +107,7 @@ resource "awscc_pcs_compute_node_group" "login" {
 }
 
 resource "aws_placement_group" "pcs" {
-  name     = "pcs"
+  name     = "${var.project}-placement"
   strategy = "cluster"
   tags     = { project = var.project }
 }
@@ -120,8 +127,15 @@ data "aws_ec2_instance_type" "all" {
 
 resource "aws_launch_template" "pcs" {
   for_each    = local.all_instances
-  name_prefix = "pcs-${each.value}"
+  name_prefix = "${var.project}-${each.value}"
   tags        = { project = var.project }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${var.project}-${each.value}"
+    }
+  }
 
   metadata_options {
     http_endpoint               = "enabled"
@@ -130,7 +144,7 @@ resource "aws_launch_template" "pcs" {
   }
 
   key_name = var.ssh_key
-  # Turn off SMT for non-HPC instances (HPC instances don't support CpuOptions)
+
   dynamic "cpu_options" {
     for_each = startswith(each.value, "hpc") ? [] : [1]
     content {

@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "pcs_compute_role" {
-  name_prefix        = "pcs-compute-role"
+  name_prefix        = "${var.project}-compute-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
   path               = "/aws-pcs/"
 }
@@ -26,7 +26,7 @@ data "aws_iam_policy_document" "pcs_policy" {
 }
 
 resource "aws_iam_role_policy" "pcs_policy" {
-  name   = "pcs_policy"
+  name   = "${var.project}-pcs-policy"
   role   = aws_iam_role.pcs_compute_role.name
   policy = data.aws_iam_policy_document.pcs_policy.json
 }
@@ -51,6 +51,6 @@ resource "aws_iam_instance_profile" "pcs_compute_profile" {
 }
 
 resource "aws_key_pair" "pcs" {
-  key_name   = "pcs-key"
+  key_name   = "${var.project}-key"
   public_key = var.ssh_key
 }

@@ -5,6 +5,7 @@ locals {
 module "vpc" {
   source = "./modules/vpc"
 
+  project           = var.project
   region            = var.region
   availability_zone = var.availability_zone
   vpc_cidr          = var.vpc_cidr
@@ -14,16 +15,19 @@ module "vpc" {
 
 module "iam" {
   source  = "./modules/iam"
+  project = var.project
   ssh_key = var.ssh_key
 }
 
 module "s3" {
   source    = "./modules/s3"
+  project   = var.project
   s3_bucket = var.s3_bucket
 }
 
 module "fsx" {
   source            = "./modules/fsx"
+  project           = var.project
   vpc_id            = module.vpc.vpc_id
   vpc_cidr          = var.vpc_cidr
   public_subnet_id  = module.vpc.public_subnet_id
@@ -34,6 +38,7 @@ module "fsx" {
 
 module "ldap" {
   source            = "./modules/ldap"
+  project           = var.project
   region            = var.region
   ssh_key           = module.iam.ssh_key
   private_subnet_id = module.vpc.private_subnet_id
@@ -47,6 +52,7 @@ module "ldap" {
 
 module "ami" {
   source             = "./modules/ami"
+  project            = var.project
   region             = var.region
   ssh_key            = module.iam.ssh_key
   public_subnet_id   = module.vpc.public_subnet_id
@@ -66,6 +72,7 @@ module "ami" {
 module "pcs" {
   source = "./modules/pcs"
 
+  project       = var.project
   region        = var.region
   ssh_key       = module.iam.ssh_key
   ami_id_x86    = module.ami.x86_id
