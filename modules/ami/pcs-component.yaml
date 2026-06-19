@@ -37,7 +37,7 @@ parameters:
       description: Slurm version
   - EFAVersion:
       type: string
-      default: '1.46.0'
+      default: '1.48.0'
       description: EFA version
   - ZFSDNS:
       type: string
@@ -147,7 +147,7 @@ phases:
         inputs:
           commands:
             - |
-              yum install -y amazon-cloudwatch-agent
+              dnf install -y amazon-cloudwatch-agent
 
       - name: MountOpenZFS
         action: ExecuteBash

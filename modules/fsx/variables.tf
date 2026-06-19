@@ -34,7 +34,9 @@ variable "fsxl" {
     deployment_type       = string
     data_compression_type = string
     efa_enabled           = bool
+    storage_capacity      = number
     storage_type          = string
+    per_unit_storage_throughput   = number
     throughput_capacity   = number
     data_read_cache = object({
       sizing_mode = string
@@ -49,7 +51,9 @@ variable "fsxl" {
     deployment_type       = "PERSISTENT_2"
     data_compression_type = "LZ4"
     efa_enabled           = true
+    storage_capacity      = 4800
     storage_type          = "INTELLIGENT_TIERING"
+    per_unit_storage_throughput   = 1000
     throughput_capacity   = 4000
     data_read_cache = {
       sizing_mode = "USER_PROVISIONED"
