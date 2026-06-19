@@ -207,13 +207,18 @@ resource "aws_fsx_lustre_file_system" "fsxl" {
   data_compression_type = var.fsxl.data_compression_type
   efa_enabled           = var.fsxl.efa_enabled
   security_group_ids    = [aws_security_group.fsxl.id]
+  storage_capacity      = var.fsxl.storage_type != "INTELLIGENT_TIERING" ? var.fsxl.storage_capacity : null
   storage_type          = var.fsxl.storage_type
   subnet_ids            = [var.private_subnet_id]
-  throughput_capacity   = var.fsxl.throughput_capacity
+  per_unit_storage_throughput = var.fsxl.storage_type != "INTELLIGENT_TIERING" ?  var.fsxl.per_unit_storage_throughput : null
+  throughput_capacity   = var.fsxl.storage_type == "INTELLIGENT_TIERING" ?  var.fsxl.throughput_capacity : null
 
-  data_read_cache_configuration {
-    sizing_mode = var.fsxl.data_read_cache.sizing_mode
-    size        = var.fsxl.data_read_cache.size
+  dynamic "data_read_cache_configuration" {
+    for_each = var.fsxl.storage_type == "INTELLIGENT_TIERING" ? [1] : []
+    content {
+      sizing_mode = var.fsxl.data_read_cache.sizing_mode
+      size        = var.fsxl.data_read_cache.size
+    }
   }
 
   metadata_configuration {
