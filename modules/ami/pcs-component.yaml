@@ -37,7 +37,7 @@ parameters:
       description: Slurm version
   - EFAVersion:
       type: string
-      default: '1.48.0'
+      default: '1.49.0'
       description: EFA version
   - ZFSDNS:
       type: string

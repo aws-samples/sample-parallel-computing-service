@@ -12,7 +12,7 @@ resource "awscc_pcs_cluster" "pcs" {
     version = var.slurm_version
   }
 
-  size = "SMALL"
+  size = "MEDIUM"
 
   slurm_configuration = {
     accounting = {
@@ -86,7 +86,7 @@ resource "aws_launch_template" "pcs_login" {
 resource "awscc_pcs_compute_node_group" "login" {
   name       = "${var.project}-login"
   cluster_id = awscc_pcs_cluster.pcs.name
-  tags = { project = var.project, Name = "${var.project}-login" }
+  tags       = { project = var.project, Name = "${var.project}-login" }
   custom_launch_template = {
     template_id = aws_launch_template.pcs_login.id
     version     = aws_launch_template.pcs_login.latest_version
@@ -186,7 +186,7 @@ resource "awscc_pcs_compute_node_group" "x86" {
   for_each   = toset(var.instance_x86)
   name       = split(".", each.value)[0]
   cluster_id = awscc_pcs_cluster.pcs.name
-  tags = { project = var.project }
+  tags       = { project = var.project }
   custom_launch_template = {
     template_id = aws_launch_template.pcs[each.value].id
     version     = aws_launch_template.pcs[each.value].latest_version
@@ -200,7 +200,7 @@ resource "awscc_pcs_compute_node_group" "x86" {
   ]
   scaling_configuration = {
     min_instance_count = 0,
-    max_instance_count = 10
+    max_instance_count = 100
   }
   subnet_ids      = [var.private_subnet_id]
   purchase_option = "ONDEMAND"
@@ -209,7 +209,7 @@ resource "awscc_pcs_compute_node_group" "x86" {
 resource "awscc_pcs_queue" "x86" {
   cluster_id = awscc_pcs_cluster.pcs.cluster_id
   name       = "x86"
-  tags = { project = var.project }
+  tags       = { project = var.project }
   compute_node_group_configurations = [
     for ng in awscc_pcs_compute_node_group.x86 :
     { compute_node_group_id = ng.compute_node_group_id }
@@ -231,7 +231,7 @@ resource "awscc_pcs_compute_node_group" "arm" {
   for_each   = toset(var.instance_arm)
   name       = split(".", each.value)[0]
   cluster_id = awscc_pcs_cluster.pcs.name
-  tags = { project = var.project }
+  tags       = { project = var.project }
   custom_launch_template = {
     template_id = aws_launch_template.pcs[each.value].id
     version     = aws_launch_template.pcs[each.value].latest_version
@@ -254,7 +254,7 @@ resource "awscc_pcs_compute_node_group" "arm" {
 resource "awscc_pcs_queue" "arm" {
   cluster_id = awscc_pcs_cluster.pcs.cluster_id
   name       = "arm"
-  tags = { project = var.project }
+  tags       = { project = var.project }
   compute_node_group_configurations = [
     for ng in awscc_pcs_compute_node_group.arm :
     { compute_node_group_id = ng.compute_node_group_id }
